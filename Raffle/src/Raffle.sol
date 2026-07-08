@@ -12,6 +12,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     error Raffle__NoRegisteredPlayers();
     error Raffle__AmountMustBeAboveZero();
     error Raffle__NotEnoughToJoin();
+    error Raffle__RaffleIsNotOpen();
 
     // == SYNTACTIC SUGER == //
 
@@ -24,12 +25,12 @@ contract Raffle is VRFConsumerBaseV2Plus {
     // == STATE VARIABLES == //
     uint16 public constant REQUEST_CONFIRMATIONS = 3;
     uint32 public constant NUM_WORDS = 1;
-    uint256 public constant MIN_AMNT = 0.1 ether;
 
     bytes32 public immutable i_KEY_HASH;
     uint256 public immutable i_SUB_ID;
     uint32 public immutable i_CALL_BACK_GAS_LIMIT; // conventionally 50,000 gas
     uint256 public immutable i_INTERVAL;
+    uint256 public immutable i_ENTRANCE_FEE;
 
     STATE public sState = STATE.OPEN;
     address payable[] public sPlayers;
@@ -38,9 +39,10 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
     // == EVENTS == //
     event RewardsSentToWinner(address indexed winnerAddy);
+    event RequestId(uint256 indexed requestId);
 
     // == MODIFIERS == //
-    modifier checkAmount {
+    modifier checkAmount() {
         if (msg.value == 0) {
             revert Raffle__AmountMustBeAboveZero();
         }
@@ -48,9 +50,20 @@ contract Raffle is VRFConsumerBaseV2Plus {
     }
 
     // == SPECIAL FUNCTIONS == //
-    constructor(address _vrfcoordinator, uint256 _interval)VRFConsumerBaseV2Plus(_vrfcoordinator) {
+    constructor(
+        address _vrfcoordinator,
+        uint256 _interval,
+        bytes32 keyHash,
+        uint256 subId,
+        uint32 callBackGasLimit,
+        uint256 _entranceFee
+    ) VRFConsumerBaseV2Plus(_vrfcoordinator) {
         sLastTimeStamp = block.timestamp;
         i_INTERVAL = _interval;
+        i_KEY_HASH = keyHash;
+        i_SUB_ID = subId;
+        i_CALL_BACK_GAS_LIMIT = callBackGasLimit;
+        i_ENTRANCE_FEE = _entranceFee;
     }
 
     fallback() external {
@@ -63,14 +76,25 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
     // == PUBLIC/EXTERNAL FUNCTIONS == //
     function enterRaffle() public payable checkAmount returns (string memory) {
-        if (msg.value < MIN_AMNT) {
+        if (msg.value < i_ENTRANCE_FEE) {
             revert Raffle__NotEnoughToJoin();
+        }
+        if (sState == STATE.CALCULATING) {
+            revert Raffle__RaffleIsNotOpen();
         }
         sPlayers.push(payable(msg.sender));
         return "Raffle joined successfully";
     }
 
-    function checkUpkeep(bytes memory /**data */) public view returns (bool, bool, bool, bool) {
+    function checkUpkeep(
+        bytes memory /**
+                      * data
+                      */
+    )
+        public
+        view
+        returns (bool, bool, bool, bool)
+    {
         uint256 currentTime = block.timestamp;
         bool upkeepNeeded = false;
         // check truthy
@@ -80,10 +104,16 @@ contract Raffle is VRFConsumerBaseV2Plus {
         if (status && requiredNoOfAddress && timeUp) {
             upkeepNeeded = true;
         }
-        return (upkeepNeeded, status, requiredNoOfAddress, timeUp);
+        return (upkeepNeeded, status, requiredNoOfAddress, timeUp); // all four bools will be useful during testing
     }
 
-    function performUpkeep(bytes memory /**data */) public {
+    function performUpkeep(
+        bytes memory /**
+                      * data
+                      */
+    )
+        public
+    {
         (bool upkeepNeeded,,,) = checkUpkeep("");
         if (!upkeepNeeded) {
             revert Raffle__UpkeepNeededisFalse();
@@ -99,12 +129,20 @@ contract Raffle is VRFConsumerBaseV2Plus {
             extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
         });
         // request random words
-        s_vrfCoordinator.requestRandomWords(randomWordsRequest);
+        uint256 requestId = s_vrfCoordinator.requestRandomWords(randomWordsRequest);
+        emit RequestId(requestId);
     }
 
-    function fulfillRandomWords(uint256 /*requestId*/, uint256[] calldata randomWords) internal override {
+    function fulfillRandomWords(
+        uint256,
+        /*requestId*/
+        uint256[] calldata randomWords
+    )
+        internal
+        override
+    {
         if (sPlayers.length == 0) revert Raffle__NoRegisteredPlayers();
-        
+
         uint256 winnerIndex = randomWords[0] % sPlayers.length;
         sCurrentWinner = sPlayers[winnerIndex];
         // change contract state
@@ -123,5 +161,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
     // GETTERS
     function getTotalPlayersInRaffle() public view returns (uint256) {
         return sPlayers.length;
+    }
+
+    function getLastWinner() public returns (address) {
+        return sCurrentWinner;
     }
 }

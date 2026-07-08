@@ -1,0 +1,6 @@
+[submodule "Raffle/lib/solmate"]
+	path = Raffle/lib/solmate
+	url = https://github.com/transmission11/solmate
+[submodule "Raffle/lib/foundry-devops"]
+	path = Raffle/lib/foundry-devops
+	url = https://github.com/Cyfrin/foundry-devops
