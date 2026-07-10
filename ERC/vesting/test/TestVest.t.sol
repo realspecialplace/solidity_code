@@ -46,10 +46,11 @@ contract TestVest is Test {
         assertEq(akaraAmount, vestCaBal);
     }
 
-    function testUseNonAllwedTokenCa() public {
+    function testUseNonAllowedTokenCa() public {
         address randomCa = address(uint160(1));
         vm.startPrank(user);
         akara.approve(address(vest), akaraAmount);
+        
         vm.expectRevert(abi.encodeWithSelector(Vest.Vesting__NotSupportedToken.selector, randomCa));
         vest.vestToken(akaraAmount, randomCa);
         vm.stopPrank();
@@ -75,7 +76,7 @@ contract TestVest is Test {
         uint256 currentBal = vest.getInvestorInfo(user);
         console.log("current bal: %s Akara", currentBal/1e18);
         vm.stopPrank();
-        
+
         assert(initialBal == (currentBal + withdrawAmount));
     }
 
