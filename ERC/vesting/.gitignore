@@ -20,4 +20,4 @@ docs/
 !.env.example
 
 # folders
-lib
+lib/
