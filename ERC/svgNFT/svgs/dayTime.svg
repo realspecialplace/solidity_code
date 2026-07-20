@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700">
+  <defs>
+    <!-- Sky -->
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#74C9FF"/>
+      <stop offset="100%" stop-color="#DDF6FF"/>
+    </linearGradient>
+
+    <!-- Building gradients -->
+    <linearGradient id="building1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#A7B7C8"/>
+      <stop offset="100%" stop-color="#7F93A8"/>
+    </linearGradient>
+
+    <linearGradient id="building2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#93A7BC"/>
+      <stop offset="100%" stop-color="#6D8498"/>
+    </linearGradient>
+
+    <linearGradient id="building3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#C1CEDB"/>
+      <stop offset="100%" stop-color="#9FB3C6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sky -->
+  <rect width="1200" height="700" fill="url(#sky)"/>
+
+  <!-- Sun -->
+  <circle cx="1030" cy="110" r="55" fill="#FFD54F"/>
+  <circle cx="1030" cy="110" r="75" fill="#FFD54F" opacity="0.2"/>
+
+  <!-- Clouds -->
+  <g fill="white" opacity="0.9">
+    <ellipse cx="180" cy="120" rx="45" ry="25"/>
+    <ellipse cx="220" cy="115" rx="55" ry="30"/>
+    <ellipse cx="265" cy="120" rx="40" ry="22"/>
+
+    <ellipse cx="700" cy="90" rx="50" ry="28"/>
+    <ellipse cx="745" cy="85" rx="60" ry="33"/>
+    <ellipse cx="795" cy="90" rx="45" ry="25"/>
+  </g>
+
+  <!-- Background skyline -->
+  <g opacity="0.55">
+    <rect x="0" y="290" width="70" height="240" fill="#B7C8D8"/>
+    <rect x="60" y="250" width="90" height="280" fill="#AFC2D4"/>
+    <rect x="140" y="310" width="60" height="220" fill="#B9CBDD"/>
+    <rect x="195" y="210" width="95" height="320" fill="#A9BDD0"/>
+    <rect x="285" y="280" width="70" height="250" fill="#B5C8DA"/>
+    <rect x="345" y="240" width="90" height="290" fill="#AFC2D4"/>
+    <rect x="430" y="300" width="60" height="230" fill="#B9CBDD"/>
+    <rect x="480" y="180" width="110" height="350" fill="#AFC2D4"/>
+    <rect x="585" y="260" width="70" height="270" fill="#B9CBDD"/>
+    <rect x="645" y="220" width="80" height="310" fill="#AFC2D4"/>
+    <rect x="720" y="290" width="65" height="240" fill="#B9CBDD"/>
+    <rect x="780" y="180" width="110" height="350" fill="#AFC2D4"/>
+    <rect x="885" y="250" width="80" height="280" fill="#B9CBDD"/>
+    <rect x="955" y="300" width="65" height="230" fill="#AFC2D4"/>
+    <rect x="1015" y="230" width="95" height="300" fill="#B9CBDD"/>
+    <rect x="1100" y="270" width="100" height="260" fill="#AFC2D4"/>
+  </g>
+
+  <!-- Foreground skyline -->
+  <g>
+    <rect x="20" y="360" width="100" height="220" fill="url(#building1)"/>
+    <rect x="120" y="280" width="90" height="300" fill="url(#building2)"/>
+    <rect x="210" y="340" width="85" height="240" fill="url(#building3)"/>
+
+    <rect x="300" y="180" width="120" height="400" fill="url(#building2)"/>
+    <polygon points="360,130 335,180 385,180" fill="#6D8498"/>
+
+    <rect x="430" y="300" width="90" height="280" fill="url(#building1)"/>
+
+    <rect x="530" y="120" width="140" height="460" fill="url(#building2)"/>
+    <rect x="590" y="70" width="20" height="50" fill="#6D8498"/>
+
+    <rect x="690" y="260" width="100" height="320" fill="url(#building3)"/>
+
+    <rect x="800" y="170" width="120" height="410" fill="url(#building1)"/>
+    <polygon points="860,120 830,170 890,170" fill="#7F93A8"/>
+
+    <rect x="930" y="320" width="90" height="260" fill="url(#building2)"/>
+
+    <rect x="1020" y="240" width="160" height="340" fill="url(#building3)"/>
+  </g>
+
+  <!-- Windows -->
+  <g fill="#EAF6FF">
+    <pattern id="windows" width="20" height="20" patternUnits="userSpaceOnUse">
+      <rect x="5" y="5" width="8" height="8" rx="1"/>
+    </pattern>
+
+    <rect x="30" y="370" width="80" height="190" fill="url(#windows)"/>
+    <rect x="130" y="290" width="70" height="270" fill="url(#windows)"/>
+    <rect x="220" y="350" width="65" height="210" fill="url(#windows)"/>
+    <rect x="315" y="195" width="90" height="365" fill="url(#windows)"/>
+    <rect x="440" y="310" width="70" height="250" fill="url(#windows)"/>
+    <rect x="545" y="135" width="110" height="425" fill="url(#windows)"/>
+    <rect x="705" y="275" width="70" height="285" fill="url(#windows)"/>
+    <rect x="815" y="185" width="90" height="375" fill="url(#windows)"/>
+    <rect x="945" y="335" width="60" height="225" fill="url(#windows)"/>
+    <rect x="1035" y="255" width="130" height="305" fill="url(#windows)"/>
+  </g>
+
+  <!-- Trees -->
+  <g>
+    <rect x="90" y="560" width="8" height="30" fill="#6D4C41"/>
+    <circle cx="94" cy="550" r="20" fill="#4CAF50"/>
+
+    <rect x="480" y="560" width="8" height="30" fill="#6D4C41"/>
+    <circle cx="484" cy="550" r="20" fill="#43A047"/>
+
+    <rect x="930" y="560" width="8" height="30" fill="#6D4C41"/>
+    <circle cx="934" cy="550" r="20" fill="#4CAF50"/>
+  </g>
+
+  <!-- Ground -->
+  <rect x="0" y="580" width="1200" height="120" fill="#66BB6A"/>
+
+  <!-- Road -->
+  <rect x="0" y="610" width="1200" height="90" fill="#4A4A4A"/>
+
+  <!-- Road markings -->
+  <g fill="#F5F5F5">
+    <rect x="30" y="652" width="60" height="8"/>
+    <rect x="150" y="652" width="60" height="8"/>
+    <rect x="270" y="652" width="60" height="8"/>
+    <rect x="390" y="652" width="60" height="8"/>
+    <rect x="510" y="652" width="60" height="8"/>
+    <rect x="630" y="652" width="60" height="8"/>
+    <rect x="750" y="652" width="60" height="8"/>
+    <rect x="870" y="652" width="60" height="8"/>
+    <rect x="990" y="652" width="60" height="8"/>
+    <rect x="1110" y="652" width="60" height="8"/>
+  </g>
+</svg>

@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 700">
+  <defs>
+    <!-- Night Sky -->
+    <linearGradient id="nightSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#06142E"/>
+      <stop offset="55%" stop-color="#102A56"/>
+      <stop offset="100%" stop-color="#243B63"/>
+    </linearGradient>
+
+    <!-- Building Gradients -->
+    <linearGradient id="b1" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4A5568"/>
+      <stop offset="100%" stop-color="#202733"/>
+    </linearGradient>
+
+    <linearGradient id="b2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#586273"/>
+      <stop offset="100%" stop-color="#273140"/>
+    </linearGradient>
+
+    <linearGradient id="b3" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6A7686"/>
+      <stop offset="100%" stop-color="#303948"/>
+    </linearGradient>
+
+    <!-- Window Pattern -->
+    <pattern id="windows" width="22" height="22" patternUnits="userSpaceOnUse">
+      <rect x="6" y="6" width="8" height="8" rx="1" fill="#FFD95B"/>
+    </pattern>
+  </defs>
+
+  <!-- Sky -->
+  <rect width="1200" height="700" fill="url(#nightSky)"/>
+
+  <!-- Moon -->
+  <circle cx="980" cy="110" r="48" fill="#F8F9FA"/>
+  <circle cx="995" cy="98" r="40" fill="#06142E"/>
+
+  <!-- Stars -->
+  <g fill="#FFFBEA">
+    <circle cx="90" cy="70" r="2"/>
+    <circle cx="160" cy="120" r="2"/>
+    <circle cx="250" cy="50" r="1.5"/>
+    <circle cx="340" cy="95" r="2"/>
+    <circle cx="430" cy="45" r="1.5"/>
+    <circle cx="520" cy="120" r="2"/>
+    <circle cx="610" cy="65" r="1.5"/>
+    <circle cx="700" cy="95" r="2"/>
+    <circle cx="790" cy="45" r="1.5"/>
+    <circle cx="860" cy="150" r="2"/>
+    <circle cx="1060" cy="70" r="2"/>
+    <circle cx="1130" cy="130" r="2"/>
+
+    <!-- Small stars -->
+    <circle cx="120" cy="170" r="1"/>
+    <circle cx="280" cy="160" r="1"/>
+    <circle cx="460" cy="170" r="1"/>
+    <circle cx="640" cy="170" r="1"/>
+    <circle cx="820" cy="175" r="1"/>
+    <circle cx="1040" cy="180" r="1"/>
+  </g>
+
+  <!-- Background Skyline -->
+  <g opacity="0.45">
+    <rect x="0" y="300" width="70" height="230" fill="#2A3445"/>
+    <rect x="65" y="250" width="85" height="280" fill="#344153"/>
+    <rect x="140" y="320" width="60" height="210" fill="#2F3948"/>
+    <rect x="195" y="220" width="95" height="310" fill="#394759"/>
+    <rect x="285" y="280" width="70" height="250" fill="#324052"/>
+    <rect x="350" y="250" width="85" height="280" fill="#3A4758"/>
+    <rect x="430" y="300" width="70" height="230" fill="#2F3948"/>
+    <rect x="495" y="180" width="110" height="350" fill="#364456"/>
+    <rect x="600" y="260" width="75" height="270" fill="#324052"/>
+    <rect x="670" y="220" width="85" height="310" fill="#394759"/>
+    <rect x="750" y="300" width="65" height="230" fill="#2F3948"/>
+    <rect x="810" y="190" width="100" height="340" fill="#364456"/>
+    <rect x="905" y="260" width="80" height="270" fill="#324052"/>
+    <rect x="980" y="310" width="70" height="220" fill="#2F3948"/>
+    <rect x="1040" y="230" width="90" height="300" fill="#394759"/>
+    <rect x="1125" y="270" width="75" height="260" fill="#324052"/>
+  </g>
+
+  <!-- Main Buildings -->
+  <g>
+    <rect x="20" y="360" width="100" height="220" fill="url(#b1)"/>
+    <rect x="130" y="280" width="90" height="300" fill="url(#b2)"/>
+    <rect x="225" y="330" width="80" height="250" fill="url(#b3)"/>
+
+    <rect x="315" y="170" width="120" height="410" fill="url(#b2)"/>
+    <polygon points="375,120 350,170 400,170" fill="#465364"/>
+
+    <rect x="445" y="300" width="90" height="280" fill="url(#b1)"/>
+
+    <rect x="550" y="100" width="140" height="480" fill="url(#b2)"/>
+    <rect x="612" y="45" width="15" height="55" fill="#66758A"/>
+
+    <rect x="710" y="250" width="100" height="330" fill="url(#b3)"/>
+
+    <rect x="825" y="160" width="120" height="420" fill="url(#b1)"/>
+    <polygon points="885,110 855,160 915,160" fill="#4E5D70"/>
+
+    <rect x="960" y="320" width="90" height="260" fill="url(#b2)"/>
+
+    <rect x="1060" y="220" width="120" height="360" fill="url(#b3)"/>
+  </g>
+
+  <!-- Windows -->
+  <g>
+    <rect x="30" y="370" width="80" height="190" fill="url(#windows)"/>
+    <rect x="140" y="290" width="70" height="270" fill="url(#windows)"/>
+    <rect x="235" y="340" width="60" height="220" fill="url(#windows)"/>
+    <rect x="330" y="180" width="90" height="380" fill="url(#windows)"/>
+    <rect x="455" y="310" width="70" height="250" fill="url(#windows)"/>
+    <rect x="565" y="115" width="110" height="445" fill="url(#windows)"/>
+    <rect x="725" y="265" width="70" height="295" fill="url(#windows)"/>
+    <rect x="840" y="175" width="90" height="385" fill="url(#windows)"/>
+    <rect x="975" y="335" width="60" height="225" fill="url(#windows)"/>
+    <rect x="1075" y="235" width="90" height="325" fill="url(#windows)"/>
+  </g>
+
+  <!-- Street Lights -->
+  <g>
+    <rect x="180" y="540" width="5" height="50" fill="#5F6C7B"/>
+    <circle cx="182.5" cy="535" r="7" fill="#FFE082"/>
+    <circle cx="182.5" cy="535" r="18" fill="#FFE082" opacity="0.18"/>
+
+    <rect x="620" y="540" width="5" height="50" fill="#5F6C7B"/>
+    <circle cx="622.5" cy="535" r="7" fill="#FFE082"/>
+    <circle cx="622.5" cy="535" r="18" fill="#FFE082" opacity="0.18"/>
+
+    <rect x="1010" y="540" width="5" height="50" fill="#5F6C7B"/>
+    <circle cx="1012.5" cy="535" r="7" fill="#FFE082"/>
+    <circle cx="1012.5" cy="535" r="18" fill="#FFE082" opacity="0.18"/>
+  </g>
+
+  <!-- Grass -->
+  <rect x="0" y="580" width="1200" height="120" fill="#1F4D2C"/>
+
+  <!-- Road -->
+  <rect x="0" y="610" width="1200" height="90" fill="#202020"/>
+
+  <!-- Road Markings -->
+  <g fill="#F5F5F5">
+    <rect x="30" y="652" width="60" height="8"/>
+    <rect x="150" y="652" width="60" height="8"/>
+    <rect x="270" y="652" width="60" height="8"/>
+    <rect x="390" y="652" width="60" height="8"/>
+    <rect x="510" y="652" width="60" height="8"/>
+    <rect x="630" y="652" width="60" height="8"/>
+    <rect x="750" y="652" width="60" height="8"/>
+    <rect x="870" y="652" width="60" height="8"/>
+    <rect x="990" y="652" width="60" height="8"/>
+    <rect x="1110" y="652" width="60" height="8"/>
+  </g>
+</svg>
