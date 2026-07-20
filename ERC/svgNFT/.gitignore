@@ -1,4 +1,4 @@
 .env
-lib/
+lib
 ./broadcast
 foundry.lock
