@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import { Script } from "forge-std/Script.sol";
+import { Script, console } from "forge-std/Script.sol";
+import { MockV3Aggregator } from "@chainlink/contracts/src/v0.8/tests/MockV3Aggregator.sol";
 
 contract HelperConfig is Script {
     // == ERRORS == //
@@ -10,13 +11,17 @@ contract HelperConfig is Script {
     // == CUSTOME TYPES == //
     struct NetworkConfig {
         address vrfCoordinator;
+        address priceFeed;
     }
 
     // == STATE VARIABLES == //
     uint256 public ANVIL_CHAIN = 31337;
     uint256 public SEPOLIA_CHAIN = 11155111;
+    uint8 public constant PRICE_DECIMAL = 8;
+    int256 public constant MOCK_ETH_PRICE = 2000e8;
+
     mapping(uint256 chainId => NetworkConfig configs) public sNetworkConfigs;
-    NetworkConfig public networkConfig;
+    NetworkConfig public localNetworkConfig;
 
     // == SPECIAL FUNCTIONS == //
     constructor() {
@@ -24,23 +29,31 @@ contract HelperConfig is Script {
     }
 
     // == PUBLIC/EXTERNAL FUNCTIONS == //
-    function getSepoliaConfig() public returns(NetworkConfig memory) {
-        return networkConfig = NetworkConfig({
-            vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B
+    function getSepoliaConfig() public pure returns(NetworkConfig memory) {
+        return NetworkConfig({
+            vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B,
+            priceFeed: 0x694AA1769357215DE4FAC081bf1f309aDC325306
         });
     }
 
-    function getAnvilConfig() public view returns(NetworkConfig memory) {
-        if (networkConfig.vrfCoordinator != address(0)) {
-            return networkConfig;
+    function getAnvilConfig() public returns(NetworkConfig memory) {
+        if (localNetworkConfig.vrfCoordinator != address(0)) {
+            return localNetworkConfig;
         }
+        // deploy mock aggregatorV3Interface
+        vm.startBroadcast();
+        MockV3Aggregator _priceFeed = new MockV3Aggregator(PRICE_DECIMAL, MOCK_ETH_PRICE);
+        vm.stopBroadcast();
+        //console.log("Mock PriceFeed CA: ", address(_priceFeed));
+
         return NetworkConfig({
-            vrfCoordinator: address(uint160(200))
+            vrfCoordinator: address(uint160(200)),
+            priceFeed: address(_priceFeed)
         });
     }
 
     // getters
-    function getConfigByChainId(uint256 chainId) public view returns (NetworkConfig memory) {
+    function getConfigByChainId(uint256 chainId) public returns (NetworkConfig memory) {
         if (chainId == ANVIL_CHAIN) {
             return getAnvilConfig();
         } 
@@ -52,7 +65,7 @@ contract HelperConfig is Script {
         }
     }
 
-    function getConfig() public view returns(NetworkConfig memory) {
+    function getConfig() public returns(NetworkConfig memory) {
         return getConfigByChainId(block.chainid);
     }
 }

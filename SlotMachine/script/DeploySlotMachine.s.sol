@@ -13,7 +13,7 @@ contract DeploySlotMachine is Script {
         HelperConfig.NetworkConfig memory config = helper.getConfig();
 
         vm.startBroadcast();
-        slotMachine = new SlotMachine(config.vrfCoordinator);
+        slotMachine = new SlotMachine(config.vrfCoordinator, config.priceFeed);
         vm.stopBroadcast();
 
         return slotMachine;

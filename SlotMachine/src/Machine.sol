@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import { VRFConsumerBaseV2 } from "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol";
-import { VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+import { VRFConsumerBaseV2 } from "@chainlink/contracts/src/v0.8/vrf/VRFConsumerBaseV2.sol"; // contract
+import { VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol"; // library
+import { MachineLibrary } from "./MachineLibrary.sol";
 
 /**
 * @author 0xgrindpa
@@ -11,15 +12,21 @@ import { VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/
 contract SlotMachine is VRFConsumerBaseV2 {
     // == ERRORS == //
     error Machine__NotValidStop(uint256 index);
+    error Machine__BelowMinDeposit(uint256 usdValue);
 
     // == SYNTACTIC SUGER == //
+    using MachineLibrary for uint256;
 
     // == CUSTOME TYPES == //
 
     // == STATE VARIABLES == //
     uint256 public constant TOTAL_STOPS = 72;
     uint256 public constant TOTAL_PRICES = 8;
+    uint256 public constant MIN_DEPOSIT = 15e18; // 15 dollars(value in stable) using 18 decimals
+    address public immutable i_priceFeed;
+    address public immutable i_admin;
     mapping(uint256 stop => string price) public sStopToPrice;
+    mapping(address user => uint256 credits) public userToCreditBal; 
 
     // == EVENTS == //
 
@@ -30,7 +37,12 @@ contract SlotMachine is VRFConsumerBaseV2 {
     }
 
     // == SPECIAL FUNCTIONS == //
-    constructor(address _vrfCoordinator) VRFConsumerBaseV2(_vrfCoordinator) {
+    constructor(address _vrfCoordinator, address _priceFeed) VRFConsumerBaseV2(_vrfCoordinator) {
+        // assign contract admin
+        i_admin = msg.sender;
+        // assign pricefeed data
+        i_priceFeed = _priceFeed;
+        // configure price for each reel stop
         for (uint256 i=1; i<=TOTAL_STOPS; i++) {
             if (i <= 3) {
                 sStopToPrice[i] = "empty";
@@ -81,6 +93,13 @@ contract SlotMachine is VRFConsumerBaseV2 {
     }
 
     // == PUBLIC/EXTERNAL FUNCTIONS == //
+    function getCredit() public payable returns (uint256){
+        uint256 usdValue = uint256(msg.value).convertDepositToUsd(i_priceFeed);
+        if (usdValue < MIN_DEPOSIT) revert Machine__BelowMinDeposit(usdValue/1e18);
+
+        return usdValue;
+    }
+
     function fulfillRandomWords(uint256 /* requestId */, uint256[] memory randomWords) internal override {
 
     }
@@ -90,5 +109,9 @@ contract SlotMachine is VRFConsumerBaseV2 {
     // == GETTER FUNCTIONS == //
     function getPricePerStop(uint256 index) public view onlyValidStops(index) returns(string memory price) {
         price = sStopToPrice[index];
+    }
+
+    function getUsdPrice() public view returns (uint256 usdPrice) {
+        usdPrice = MachineLibrary.getUsdPrice(i_priceFeed);
     }
 }
