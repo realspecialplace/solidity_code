@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import { Test, console, Vm } from "forge-std/Test.sol";
-import { DeploySlotMachine } from "../script/DeploySlotMachine.s.sol";
-import { SlotMachine } from "../src/Machine.sol";
+import {Test, console, Vm} from "forge-std/Test.sol";
+import {DeploySlotMachine} from "../script/DeploySlotMachine.s.sol";
+import {SlotMachine} from "../src/Machine.sol";
 
 contract TestSlotMachine is Test {
     SlotMachine machine;
@@ -13,7 +13,6 @@ contract TestSlotMachine is Test {
     address public user = makeAddr("user");
 
     event MoreCreditAdded(uint256 indexed credits);
-
 
     function setUp() external {
         deployer = new DeploySlotMachine();
@@ -62,10 +61,10 @@ contract TestSlotMachine is Test {
         machine.getCreditBalance(user2);
     }
 
-    function testGetCreditEventAndCheckEventLog() public  {
+    function testGetCreditEventAndCheckEventLog() public {
         vm.startPrank(user);
         uint256 expectedCredit = machine.getCredit{value: weiAmount}();
-        
+
         vm.expectEmit(true, false, false, false);
         emit MoreCreditAdded(expectedCredit);
         vm.recordLogs();
@@ -92,27 +91,7 @@ contract TestSlotMachine is Test {
         console.log("Status: ", status);
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    modifier getCredit {
+    modifier getCredit() {
         vm.prank(user);
         uint256 creditSize = machine.getCredit{value: weiAmount}();
         //console.log("Received Credit: ", creditSize/1e18);
