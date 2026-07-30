@@ -13,6 +13,8 @@ contract SlotMachine is VRFConsumerBaseV2 {
     // == ERRORS == //
     error Machine__NotValidStop(uint256 index);
     error Machine__BelowMinDeposit(uint256 usdValue);
+    error Machine__NotValidUser(address user);
+    error Machine__BelowMinCreditToPlay(uint256 creditAmount);
 
     // == SYNTACTIC SUGER == //
     using MachineLibrary for uint256;
@@ -20,19 +22,28 @@ contract SlotMachine is VRFConsumerBaseV2 {
     // == CUSTOME TYPES == //
 
     // == STATE VARIABLES == //
-    uint256 public constant TOTAL_STOPS = 72;
-    uint256 public constant TOTAL_PRICES = 8;
+    uint256 private constant TOTAL_STOPS = 72;
+    uint256 private constant TOTAL_PRICES = 8;
     uint256 public constant MIN_DEPOSIT = 15e18; // 15 dollars(value in stable) using 18 decimals
+    uint256 public constant CREDIT_PER_DOLLAR = 100; // 1 credit per cent
+    uint256 public constant MIN_CREDIT_TO_PLAY = 10e18; // 10 credits since credits use 18 decimals
+
     address public immutable i_priceFeed;
     address public immutable i_admin;
     mapping(uint256 stop => string price) public sStopToPrice;
-    mapping(address user => uint256 credits) public userToCreditBal; 
+    mapping(address user => uint256 credits) public userToCreditBal; // credits has 18 decimals
 
     // == EVENTS == //
+    event MoreCreditAdded(uint256 indexed credits);
 
     // == MODIFIERS == //
     modifier onlyValidStops(uint256 index) {
         if (index > TOTAL_STOPS || index == 0) revert Machine__NotValidStop(index);
+        _;
+    }
+
+    modifier onlyValidUsers(address user) {
+        if (userToCreditBal[user] == 0) revert Machine__NotValidUser(user);
         _;
     }
 
@@ -95,10 +106,25 @@ contract SlotMachine is VRFConsumerBaseV2 {
     // == PUBLIC/EXTERNAL FUNCTIONS == //
     function getCredit() public payable returns (uint256){
         uint256 usdValue = uint256(msg.value).convertDepositToUsd(i_priceFeed);
+        // revert attempt if deposit is less than $15 in value
         if (usdValue < MIN_DEPOSIT) revert Machine__BelowMinDeposit(usdValue/1e18);
+        // convert deposit to credits (1 credit per cent)
+        uint256 credits = CREDIT_PER_DOLLAR.convertDepositToCredit(usdValue);
+        // update state
+        userToCreditBal[msg.sender] += credits;
+        // emit event
+        emit MoreCreditAdded(credits);
 
-        return usdValue;
+        return credits;
     }
+
+    function pullHandle(uint256 creditAmount) external onlyValidUsers(msg.sender) returns (bool) {
+        if (creditAmount < MIN_CREDIT_TO_PLAY) revert Machine__BelowMinCreditToPlay(creditAmount);
+
+        // implement a code that fetches 3 random numbers
+        // use modulus to reducue the random numbers to a value that does not fit into the total stop value
+        return true;
+    } 
 
     function fulfillRandomWords(uint256 /* requestId */, uint256[] memory randomWords) internal override {
 
@@ -113,5 +139,9 @@ contract SlotMachine is VRFConsumerBaseV2 {
 
     function getUsdPrice() public view returns (uint256 usdPrice) {
         usdPrice = MachineLibrary.getUsdPrice(i_priceFeed);
+    }
+
+    function getCreditBalance(address user) public view onlyValidUsers(user) returns (uint256 credits) {
+        credits = userToCreditBal[user];
     }
 }

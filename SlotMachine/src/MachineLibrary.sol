@@ -11,11 +11,15 @@ library MachineLibrary {
 
     /**
     * @param value Eth value passed as wei preferrably msg.value
-    & @param priceFeed price feed aggregator contract address
+    * @param priceFeed price feed aggregator contract address
      */
     function convertDepositToUsd(uint256 value, address priceFeed) external view returns(uint256) {
         uint256 usdPrice = getUsdPrice(priceFeed)/1e8;
         uint256 valueInUsd = value * usdPrice;
         return valueInUsd;
+    }
+
+    function convertDepositToCredit(uint256 perDollar, uint256 depositAmount) external pure returns (uint256 credits) {
+        credits = perDollar * depositAmount;
     }
 }
