@@ -87,9 +87,20 @@ contract TestSlotMachine is Test {
         uint256 creditAmount = 11e18;
 
         vm.prank(user);
-        bool status = machine.pullHandle(creditAmount);
-        console.log("Status: ", status);
+        uint256 requestId = machine.pullHandle(creditAmount);
+        console.log("Status: ", requestId);
     }
+
+    function testGetSubId() public view {
+        uint256 subId = machine.getSubscriptionId();
+
+        console.log("Sub id: ", subId);
+    }
+
+
+
+
+
 
     modifier getCredit() {
         vm.prank(user);

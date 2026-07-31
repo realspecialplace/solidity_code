@@ -44,6 +44,8 @@ contract SlotMachine is VRFConsumerBaseV2Plus {
 
     // == EVENTS == //
     event MoreCreditAdded(uint256 indexed credits);
+    event RequestIdGenerated(uint256 indexed requestId);
+    event RetrievedPricesSuccessfully(uint256 indexed requestId, string[] indexed price);
 
     // == MODIFIERS == //
     modifier onlyValidStops(uint256 index) {
@@ -133,7 +135,7 @@ contract SlotMachine is VRFConsumerBaseV2Plus {
         return credits;
     }
 
-    function pullHandle(uint256 creditAmount) external onlyValidUsers(msg.sender) returns (bool) {
+    function pullHandle(uint256 creditAmount) external onlyValidUsers(msg.sender) returns (uint256 requestId) {
         if (creditAmount < MIN_CREDIT_TO_PLAY) revert Machine__BelowMinCreditToPlay(creditAmount);
 
         // implement a code that fetches 3 random numbers
@@ -146,10 +148,10 @@ contract SlotMachine is VRFConsumerBaseV2Plus {
             extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
         });
         // pass random number request config to oracle
-        uint256 requestId = s_vrfCoordinator.requestRandomWords(randomNumbersRequest);
+        requestId = s_vrfCoordinator.requestRandomWords(randomNumbersRequest);
         sRequestIdToUser[requestId] = msg.sender;
-
-        return true;
+        // emit requestId
+        emit RequestIdGenerated(requestId);
     }
 
     // == INTERNAL/PRIVATE FUNCTIONS == //
@@ -171,6 +173,8 @@ contract SlotMachine is VRFConsumerBaseV2Plus {
         }
         // add random price to declared map
         sPlayerToPrice[player] = prices;
+        // emit event
+        emit RetrievedPricesSuccessfully(requestId, sPlayerToPrice[player]);
     }
 
     // == GETTER FUNCTIONS == //
@@ -184,5 +188,9 @@ contract SlotMachine is VRFConsumerBaseV2Plus {
 
     function getCreditBalance(address user) public view onlyValidUsers(user) returns (uint256 credits) {
         credits = sUserToCreditBal[user];
+    }
+
+    function getSubscriptionId() public view returns (uint256) {
+        return i_subId;
     }
 }
