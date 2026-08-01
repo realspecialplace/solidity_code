@@ -15,7 +15,6 @@ contract DeploySlotMachine is Script {
 
         // implement a logic that creates a subscription/funds subscription
         if (config.subId == 0) {
-            console.log("subscription creator sender: %s\nSender in config: %s", msg.sender, config.sender);
             SubscriptionCreator subCreator = new SubscriptionCreator();
             config.subId = subCreator.createSubscription(config.vrfCoordinator);
             console.log("Subscription Created");

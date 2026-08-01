@@ -8,4 +8,6 @@ remappings=[
 fs_permissions=[
     {access="read", path="./env"}
 ]
+[fuzz]
+runs=600
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
