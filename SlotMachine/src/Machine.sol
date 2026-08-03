@@ -343,4 +343,8 @@ contract SlotMachine is VRFConsumerBaseV2Plus {
     function getPlayerFreePlayCount(address player) external view returns (uint256) {
         return sPlayerToFreeSpin[player];
     }
+
+    function getLastPayout(address player) external view returns (string[] memory) {
+        return sPlayerToPrice[player];
+    }
 }

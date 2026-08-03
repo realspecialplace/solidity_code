@@ -3,7 +3,7 @@ pragma solidity ^0.8.18;
 
 import {Script, console} from "forge-std/Script.sol";
 import {LinkTokenInterface} from "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
-import {VRFCoordinatorV2Interface} from "@chainlink/contracts/src/v0.8/vrf/interfaces/VRFCoordinatorV2Interface.sol";
+import {IVRFCoordinatorV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/interfaces/IVRFCoordinatorV2Plus.sol";
 import {VRFCoordinatorV2_5Mock} from "@chainlink/contracts/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 import {HelperConfig} from "./HelperConfig.s.sol";
 
@@ -58,7 +58,7 @@ contract ConsumerAdder is MagicNumbers, Script {
             vm.stopBroadcast();
         } else {
             vm.startBroadcast(config.sender);
-            VRFCoordinatorV2Interface(vrfCoordinator).addConsumer(uint64(subId), consumer);
+            IVRFCoordinatorV2Plus(vrfCoordinator).addConsumer(subId, consumer);
             vm.stopBroadcast();
         }
     }

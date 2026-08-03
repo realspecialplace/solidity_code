@@ -29,7 +29,7 @@ contract TestSlotMachine is Test {
         vm.deal(user, 5e18);
     }
 
-    function testWhoIsCurentContractOwner() public {
+    function testWhoIsCurentContractOwner() public view {
         address currentOwner = machine.owner();
 
         console.log("Current owner: ", currentOwner);
@@ -186,10 +186,10 @@ contract TestSlotMachine is Test {
         hoax(account2, 0.5e18);
         machine.acceptOwnership();
 
-        address owner = machine.owner();
+        address currentOwner = machine.owner();
         
         console.log("Old contract owner: ", oldOwner);
-        console.log("Current owner: ", owner);
+        console.log("Current owner: ", currentOwner);
         console.log("Account 2: ", account2);
         assertEq(owner, account2);
     }
