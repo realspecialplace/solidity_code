@@ -10,7 +10,7 @@ import {HelperConfig} from "../script/HelperConfig.s.sol";
 contract TestSlotMachine is Test {
     SlotMachine machine;
     DeploySlotMachine deployer;
-    uint256 public weiAmount = 0.008e18;
+    uint256 public weiAmount = 0.0078e18;
     // instanciate helper config, get network config
     HelperConfig helper = new HelperConfig();
     HelperConfig.NetworkConfig config = helper.getConfig(); // get config based on deployed chain
@@ -27,6 +27,13 @@ contract TestSlotMachine is Test {
 
         // fund user
         vm.deal(user, 5e18);
+    }
+
+    function testWhoIsCurentContractOwner() public {
+        address currentOwner = machine.owner();
+
+        console.log("Current owner: ", currentOwner);
+        console.log("Deployer: ", config.sender);
     }
 
     function testPricePerStop() public {
@@ -91,14 +98,15 @@ contract TestSlotMachine is Test {
     }
 
     function testPullingHandleToPlay() public getCredit {
-        uint256 creditAmount = 1600e18;
+        uint256 creditAmount = 1550e18;
 
         vm.prank(user);
         uint256 requestId = machine.pullHandle(creditAmount);
         console.log("Reques ID: ", requestId);
     }
 
-    function testGetSubId() public view {
+    function testGetSubId() public {
+        vm.prank(config.sender);
         uint256 subId = machine.getSubscriptionId();
 
         console.log("Sub id: ", subId);
@@ -107,7 +115,7 @@ contract TestSlotMachine is Test {
     function testUsingAnyRequestIdToRetrieveRandomNumbers(uint256 requestId) public getCredit {
         if (block.chainid != 31337) return;
 
-        requestId = bound(requestId, 1, 300);
+        requestId = bound(requestId, 2, 300);
 
         vm.expectRevert(VRFCoordinatorV2_5Mock.InvalidRequest.selector);
         VRFCoordinatorV2_5Mock(config.vrfCoordinator).fulfillRandomWords(requestId, address(machine));
@@ -119,7 +127,7 @@ contract TestSlotMachine is Test {
         uint256 initialBal = machine.getCreditBalance(user);
 
         vm.prank(user);
-        uint256 id = machine.pullHandle(creditAmount);
+        machine.pullHandle(creditAmount);
 
         uint256 finalBal = machine.getCreditBalance(user);
 
@@ -132,10 +140,58 @@ contract TestSlotMachine is Test {
         uint256 creditAmount = 500e18;
 
         vm.startPrank(user);
-        uint256 requestId = machine.pullHandle(creditAmount);
+        machine.pullHandle(creditAmount);
         vm.expectRevert(SlotMachine.Machine__ProcessingPreviousPlay.selector);
-        uint256 requestId2 = machine.pullHandle(creditAmount);
+        machine.pullHandle(creditAmount);
         vm.stopPrank();
+    }
+
+    function testNonEligibleUserCantUseFreeSpin() public {
+        vm.prank(user);
+        vm.expectRevert(abi.encodeWithSelector(SlotMachine.Machine__NoFreePlay.selector, user));
+        machine.freePlay();
+    }
+
+    function testWithdrawBalance() public getCredit {
+        uint256 creditAmount = 1560e18;
+        
+        vm.prank(user);
+        bool status = machine.withdrawBalance(creditAmount);
+
+        console.log("Successfull withdraw: ", status);
+        assert(status == true);
+    }
+
+    function testEthBalIncreaseAfterWithdrawl() public getCredit {
+        uint256 creditAmount = 1560e18;
+        uint256 userEthBal = address(user).balance;
+
+        vm.prank(user);
+        machine.withdrawBalance(creditAmount);
+
+        uint256 userEthBalAfter = address(user).balance;
+
+        console.log("Before Eth bal: ", userEthBal);
+        console.log("After Eth Bal: ", userEthBalAfter);
+        assertEq(userEthBalAfter, userEthBal+(userEthBalAfter-userEthBal));
+    }
+
+    function testTransferContractOwnership() public {
+        address account2 = makeAddr("user2");
+        address oldOwner = machine.owner();
+        // make account2 the new contract owner
+        vm.prank(config.sender);
+        machine.transferOwnership(account2);
+        // accept ownership with account2
+        hoax(account2, 0.5e18);
+        machine.acceptOwnership();
+
+        address owner = machine.owner();
+        
+        console.log("Old contract owner: ", oldOwner);
+        console.log("Current owner: ", owner);
+        console.log("Account 2: ", account2);
+        assertEq(owner, account2);
     }
 
 

@@ -19,7 +19,22 @@ library MachineLibrary {
         return valueInUsd;
     }
 
+    /**
+    * @param usdValue incoming usd value has 8 decimals
+    * @dev usd value from getUsdPrice() has 8 decimals
+    * @notice the 8 decimals on both values will cancel out
+     */
+    function convertUsdToEth(uint256 usdValue, address priceFeed) external view returns (uint256 valueInWei) {
+        uint256 usdPrice = getUsdPrice(priceFeed);
+        // give wei value 18 decimals
+        valueInWei = (usdValue * 1e18)/usdPrice;
+    }
+
     function convertDepositToCredit(uint256 perDollar, uint256 depositAmount) external pure returns (uint256 credits) {
         credits = perDollar * depositAmount;
+    }
+
+    function convertCreditToUsd(uint256 perDollar, uint256 creditAmount) external pure returns (uint256 dollarValue) {
+        dollarValue = creditAmount/perDollar;
     }
 }

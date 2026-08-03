@@ -14,12 +14,14 @@ contract SlotMachine is VRFConsumerBaseV2Plus {
     error Machine__NotValidStop(uint256 index);
     error Machine__BelowMinDeposit(uint256 usdValue);
     error Machine__NotValidUser(address user);
-    error Machine__BelowMinCreditToPlay(uint256 creditAmount);
+    error Machine__BelowMinAmount(uint256 creditAmount);
     error Machine__AmountIsGreaterThanCreditBal(uint256 creditAmount);
     error Machine__UserIsNotAdmin(address user);
     error Machine__RangeCanNotBeBelowTen(uint256 newRange);
     error Machine__ProcessingPreviousPlay();
     error Machine_TotalFreeSpinIsBelowThree(uint256 newTotal);
+    error Machine__NoFreePlay(address player);
+    error Machine__FailedWithdrawal();
 
     // == SYNTACTIC SUGER == //
     using MachineLibrary for uint256;
@@ -45,7 +47,6 @@ contract SlotMachine is VRFConsumerBaseV2Plus {
 
     address private immutable i_vrfCoordinator;
     address public immutable i_priceFeed;
-    address public immutable i_admin;
     bytes32 public immutable i_keyHash;
     uint256 private immutable i_subId;
     uint32 public immutable i_callbackGasLimit;
@@ -75,17 +76,10 @@ contract SlotMachine is VRFConsumerBaseV2Plus {
         _;
     }
 
-    modifier onlyAdmin {
-        if (msg.sender != i_admin) revert Machine__UserIsNotAdmin(msg.sender);
-        _;
-    }
-
     // == SPECIAL FUNCTIONS == //
     constructor(address _vrfCoordinator, address _priceFeed, bytes32 keyHash, uint256 subId, uint32 gasLimit)
         VRFConsumerBaseV2Plus(_vrfCoordinator)
     {
-        // assign contract admin
-        i_admin = msg.sender;
         // assign other immutable variables
         i_vrfCoordinator = _vrfCoordinator;
         i_priceFeed = _priceFeed;
@@ -143,11 +137,11 @@ contract SlotMachine is VRFConsumerBaseV2Plus {
     }
 
     // == PUBLIC/EXTERNAL FUNCTIONS == //
-    function changeFreeSpinRange(uint256 newRange) public onlyAdmin {
+    function changeFreeSpinRange(uint256 newRange) external onlyOwner {
         if (newRange < 10) revert Machine__RangeCanNotBeBelowTen(newRange);
         sFreeSpinNumberRange = newRange;
     }
-    function changeTotalFreeSpins(uint256 newTotal) public onlyAdmin {
+    function changeTotalFreeSpins(uint256 newTotal) external onlyOwner {
         if (newTotal < 3) revert Machine_TotalFreeSpinIsBelowThree(newTotal);
         sTotalFreeSpins = newTotal;
     }
@@ -171,12 +165,38 @@ contract SlotMachine is VRFConsumerBaseV2Plus {
     * @notice eligible users are given a free spin worth min credit value
      */
     function freePlay() external returns (uint256 requestId) {
+        // check if user is eligible for free play
+        if (sPlayerToFreeSpin[msg.sender] == 0) revert Machine__NoFreePlay(msg.sender);
 
+        // check if user is done with last round and can play again
+        if (sPlayerToState[msg.sender] == State.BUSY) revert Machine__ProcessingPreviousPlay();
+
+        // implement a code that fetches 4 random numbers
+        VRFV2PlusClient.RandomWordsRequest memory randomNumbersRequest = VRFV2PlusClient.RandomWordsRequest({
+            keyHash: i_keyHash,
+            subId: i_subId,
+            requestConfirmations: CONFIRMATIONS,
+            callbackGasLimit: i_callbackGasLimit,
+            numWords: NUM_WORDS,
+            extraArgs: VRFV2PlusClient._argsToBytes(VRFV2PlusClient.ExtraArgsV1({nativePayment: false}))
+        });
+        // pass random number request struct config to oracle
+        requestId = s_vrfCoordinator.requestRandomWords(randomNumbersRequest);
+        sRequestIdToUser[requestId] = msg.sender;
+        // add player to players
+        sAllPlayers.push(payable(msg.sender));
+        // store used credit
+        sPlayerToLastPlayed[msg.sender] = MIN_DEPOSIT;
+        
+        // change state to busy
+        sPlayerToState[msg.sender] = State.BUSY;
+
+        // emit requestId
+        emit RequestIdGenerated(requestId);
     }
     
-
     function pullHandle(uint256 creditAmount) external onlyValidUsers(msg.sender) returns (uint256 requestId) {
-        if (creditAmount < MIN_CREDIT_TO_PLAY) revert Machine__BelowMinCreditToPlay(creditAmount);
+        if (creditAmount < MIN_CREDIT_TO_PLAY) revert Machine__BelowMinAmount(creditAmount);
         if (creditAmount > sUserToCreditBal[msg.sender]) revert Machine__AmountIsGreaterThanCreditBal(creditAmount);
 
         // check if user is done with last round and can play again
@@ -207,14 +227,38 @@ contract SlotMachine is VRFConsumerBaseV2Plus {
         emit RequestIdGenerated(requestId);
     }
 
+    /**
+    * @notice This function allows users to convert their credits to liquidity and withdraw them.
+    * @dev creditAmount has 18 decimals
+     */
+    function withdrawBalance(uint256 creditAmount) external returns(bool) {
+        // check if withdraw amount is greater than Bal
+        if (creditAmount > sUserToCreditBal[msg.sender]) revert Machine__AmountIsGreaterThanCreditBal(creditAmount);
+        // check if user has credit
+        if (sUserToCreditBal[msg.sender] == 0) revert Machine__BelowMinAmount(creditAmount);
+        // convert usd value to 8 decimals
+        uint256 USDValue = (CREDIT_PER_DOLLAR.convertCreditToUsd(creditAmount))/1e10;
+        // check if usdValue is above $1
+        if ((USDValue) < 1e8) revert Machine__BelowMinAmount(USDValue);
+        // convert usd to wei
+        uint256 weiValue = USDValue.convertUsdToEth(i_priceFeed);
+
+        sUserToCreditBal[msg.sender] -= creditAmount;
+        (bool status,) = payable(msg.sender).call{value: weiValue}("");
+        if (!status) revert Machine__FailedWithdrawal();
+
+        return status;
+    }
+
     // == INTERNAL/PRIVATE FUNCTIONS == //
     /**
     * @param randomWords While the first 3 numbers are used to get random prices,
-    * the 4th random number determines if user will win free spin
+    * the 4th random number determines if player will win free spin
+    * @notice None matching pairs win nothinng
      */
     function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
         address player = sRequestIdToUser[requestId];
-        uint256 totalPrice = 0;
+        uint256 totalPayOut = 0;
 
         string[] memory prices = new string[](3);
         // use modulus to reduce the random numbers to a random value that does fits into the total stop value
@@ -242,56 +286,61 @@ contract SlotMachine is VRFConsumerBaseV2Plus {
         // handle logic for all matching pairs
         if (firstPrice == secondPrice && secondPrice == thirdPrice) {
                 if (firstPrice == keccak256(abi.encodePacked("One Bar"))) {
-                    totalPrice = sPlayerToLastPlayed[player] * 10;
+                    totalPayOut = sPlayerToLastPlayed[player] * 10;
                 } else if (firstPrice == keccak256(abi.encodePacked("Two Bar"))) {
-                    totalPrice = sPlayerToLastPlayed[player] * 20;
+                    totalPayOut = sPlayerToLastPlayed[player] * 20;
                 } else if (firstPrice == keccak256(abi.encodePacked("Three Bar"))) {
-                    totalPrice = sPlayerToLastPlayed[player] * 40;
+                    totalPayOut = sPlayerToLastPlayed[player] * 40;
                 } else if (firstPrice == keccak256(abi.encodePacked("Double Diamond"))) {
-                    totalPrice = sPlayerToLastPlayed[player] * 900;
+                    totalPayOut = sPlayerToLastPlayed[player] * 900;
                 } else if (firstPrice == keccak256(abi.encodePacked("Cherry"))) {
-                    totalPrice = sPlayerToLastPlayed[player]/2;
+                    totalPayOut = sPlayerToLastPlayed[player]/2;
                 }
         }
-        // handle semi matchng pairs
+        // handle logic for semi matchng pairs
         else if (firstPrice == secondPrice || secondPrice == thirdPrice || firstPrice == thirdPrice) {
                 if (firstPrice == keccak256(abi.encodePacked("One Bar")) || thirdPrice == keccak256(abi.encodePacked("One Bar"))) {
-                    totalPrice = sPlayerToLastPlayed[player]/2;
+                    totalPayOut = sPlayerToLastPlayed[player]/2;
                 } else if (firstPrice == keccak256(abi.encodePacked("Two Bar")) || thirdPrice == keccak256(abi.encodePacked("Two Bar"))) {
-                    totalPrice = sPlayerToLastPlayed[player];
+                    totalPayOut = sPlayerToLastPlayed[player];
                 } else if (firstPrice == keccak256(abi.encodePacked("Three Bar")) || thirdPrice == keccak256(abi.encodePacked("Three Bar"))) {
-                   totalPrice = sPlayerToLastPlayed[player] * 3; 
+                   totalPayOut = sPlayerToLastPlayed[player] * 3; 
                 } else if (firstPrice == keccak256(abi.encodePacked("Double Diamond")) || thirdPrice == keccak256(abi.encodePacked("Double Diamond"))) {
-                    totalPrice = sPlayerToLastPlayed[player] * 10;
+                    totalPayOut = sPlayerToLastPlayed[player] * 10;
                 }
             }
 
         // update credit bal
-        sUserToCreditBal[player] += totalPrice; // totalPrice is 0 if no conditions above meet
-        
-        // change state
-        sPlayerToState[player] = State.PLAY;
+        sUserToCreditBal[player] += totalPayOut; // totalPayOut is 0 if no conditions above meet
 
         // add random price to declared map
         sPlayerToPrice[player] = prices;
+        
+        // change state to free to play again
+        sPlayerToState[player] = State.PLAY;
+
         // emit event
         emit RetrievedPricesSuccessfully(requestId, sPlayerToPrice[player]);
     }
 
     // == GETTER FUNCTIONS == //
-    function getPricePerStop(uint256 index) public view onlyValidStops(index) returns (string memory price) {
+    function getPricePerStop(uint256 index) external view onlyValidStops(index) returns (string memory price) {
         price = sStopToPrice[index];
     }
 
-    function getUsdPrice() public view returns (uint256 usdPrice) {
+    function getUsdPrice() external view returns (uint256 usdPrice) {
         usdPrice = MachineLibrary.getUsdPrice(i_priceFeed);
     }
 
-    function getCreditBalance(address user) public view onlyValidUsers(user) returns (uint256 credits) {
+    function getCreditBalance(address user) external view onlyValidUsers(user) returns (uint256 credits) {
         credits = sUserToCreditBal[user];
     }
 
-    function getSubscriptionId() public view onlyAdmin returns (uint256) {
+    function getSubscriptionId() external view onlyOwner returns (uint256) {
         return i_subId;
+    }
+
+    function getPlayerFreePlayCount(address player) external view returns (uint256) {
+        return sPlayerToFreeSpin[player];
     }
 }
