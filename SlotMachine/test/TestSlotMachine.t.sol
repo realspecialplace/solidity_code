@@ -191,7 +191,7 @@ contract TestSlotMachine is Test {
         console.log("Old contract owner: ", oldOwner);
         console.log("Current owner: ", currentOwner);
         console.log("Account 2: ", account2);
-        assertEq(owner, account2);
+        assertEq(currentOwner, account2);
     }
 
 
