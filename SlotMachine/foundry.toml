@@ -11,4 +11,10 @@ fs_permissions=[
 ]
 [fuzz]
 runs=600
+
+[invariant]
+runs=250
+depth=200
+fail_on_test=true
+
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
